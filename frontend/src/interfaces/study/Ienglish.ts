@@ -4,12 +4,19 @@ interface IenCpListItem {
     isPublic?:boolean;
 }
 
+type keyProp = string | boolean | number;
+
 interface IenListItem {
-    enIdx: string | number;
-    title: string;
-    contentKr: string;
-    contentEn: string;
-    explanation: string;
+    [key: string]: keyProp | undefined;
+    enIdx: number;
+    title: keyProp;
+    contentEn: keyProp;
+    contentKr: keyProp;
+    explanation: keyProp;
+    isView?: boolean;
+    isSlideView?: boolean;
+    isUpdating?: keyProp | undefined;
+    tab?: string;
 }
 
 export type {

@@ -6,9 +6,6 @@ import { ModalBox } from '../../components/units/modal/modal'
 
 const StudyEnglishPage = (props: any) => {
     const { chapterList, addChapterName, setAddChapterName, addChapter, addModalOpen, setAddModalOpen } = props;
-
-    console.log('chapterList', chapterList)
-
     return (
         <Container sx={{ height:'100%' }}>
             <Container sx={{ height:'calc(100% - 50px)', maxHeight:'calc(100% - 50px)', overflowY:'auto', padding:'20px 0 0 0' }}>

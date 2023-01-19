@@ -8,46 +8,30 @@ import { IenListItem } from '../../interfaces/study/Ienglish'
 import sodiStudyApi from '../../utils/api'
 import { responseData } from '../../interfaces/Iresponse'
 
+//TODO - index signature에 대한 블로그 글 작성
+
 const ViewEnglish = () => {
     const { enCpIdx } = useParams();
     const { studyEnStore } = indexStore;
-    const [slideOnOff, setSlideOnOff] = useState<any>({});
-    const [slideTab, setSlideTab] = useState<any>({});
-    const [isView, setIsView] = useState<boolean>(false);
+
+    const initialViewEn:IenListItem = {
+        enIdx: -1,
+        title: '',
+        contentEn: '',
+        contentKr: '',
+        explanation: '',
+    };
+
     const [addModalOpen, setAddModalOpen] = useState(false);
     const slideContainerRef = useRef(null);
-    const [inputs, setInputs] = useState<any>({
-        title: '',
-        contentEn:'',
-        contentKr:'',
-        explanation:''
-    });
+    const [inputs, setInputs] = useState<IenListItem>(initialViewEn);
+    const [updateInputs, setUpdateInputs] = useState<IenListItem>(initialViewEn);
+    const [enList, setEnList] = useState<Array<IenListItem>>([]);
 
-    useEffect(() => {
-    (async () => {
-        if (typeof enCpIdx === 'string') {
-            await studyEnStore.initEnList(parseInt(enCpIdx))
-        } else {
-            studyEnStore.enList = [];
-        }
-    })()
-    }, []);
-
-    useEffect(() => {
-        let initialSlideOnOff: any = {};
-
-        studyEnStore.enList.slice().forEach(({ enIdx }:IenListItem, idx: number) => {
-            initialSlideOnOff[enIdx] = idx === 0;
-            slideTab[enIdx] = "en";
-        })
-
-        setSlideOnOff(initialSlideOnOff);
-    }, [studyEnStore.enList]);
-
-    const addEnglishPage = useCallback(() => {
+    const addEnItem = (): void => {
         Object.keys(inputs).some(key => {
             const value = inputs[key];
-            if (value.trim().length <= 0) {
+            if (typeof value === 'string' && value?.trim().length <= 0) {
                 alert(`'${key}'의 값을 입력해 주세요.`);
                 return true;
             }
@@ -56,11 +40,12 @@ const ViewEnglish = () => {
         });
 
         (async () => {
+            console.log('inputs', inputs)
+
             const { statusText }:responseData = await sodiStudyApi.study.en.create(enCpIdx, inputs);
 
-            console.log(statusText)
-
             setInputs({
+                enIdx:-1,
                 title: '',
                 contentEn:'',
                 contentKr:'',
@@ -76,24 +61,102 @@ const ViewEnglish = () => {
                 }
             }
         })();
-    }, [inputs]);
+
+        enList.push({ ...inputs, tab:'en',enIdx: ((enList.at(-1)?.enIdx ?? 1) + 1) });
+        resetEnlist();
+    };
+
+    const updateEnItem = async (enItems:IenListItem | Array<IenListItem>, db: boolean = false) => {
+        if (Array.isArray(enItems)) {
+            enItems.forEach((enItem:IenListItem) => {
+                let findIdx = enList.findIndex(d => d.enIdx === enItem.enIdx);
+                if (findIdx !== -1) {
+                    enList[findIdx] = { ...enList[findIdx], ...enItem };
+                }
+            })
+
+            setEnList(() => [...enList]);
+        } else {
+            const findIdx = enList.findIndex(d => d.enIdx === enItems.enIdx);
+
+            if (findIdx !== -1) {
+                enList[findIdx] = { ...enList[findIdx], ...enItems };
+                setEnList(() => [...enList]);
+            }
+
+            if (db && typeof enCpIdx === "string") {
+                const { statusText, msg }:responseData = await sodiStudyApi.study.en.update(parseInt(enCpIdx), updateInputs);
+                console.log('statusText, msg', statusText, msg)
+            }
+        }
+    };
+
+    const resetEnlist = (): void => {
+        setEnList(() => enList.map((enItem:IenListItem, idx:number) => {
+            return {
+                ...enItem,
+                isUpdating:false,
+                isSlideView: idx === 0
+            };
+        }));
+    };
+
+    const deleteEnItem = (enIdx:number): void => {
+        enList.splice(enList.findIndex(d => d.enIdx === enIdx), 1);
+        resetEnlist();
+
+        (async () => {
+            if (typeof enCpIdx === "string") {
+                const { statusText }:responseData = await sodiStudyApi.study.en.delete(parseInt(enCpIdx), enIdx);
+                console.log('statusText', statusText);
+            }
+
+        })();
+    };
+
+    useEffect(() => {
+    (async () => {
+        if (typeof enCpIdx === 'string') {
+            await studyEnStore.initEnList(parseInt(enCpIdx));
+
+            setEnList(studyEnStore.enList.slice().map((enItem:IenListItem, idx:number) => {
+                if (idx === 0) {
+                    setUpdateInputs({
+                        enIdx:enItem.enIdx,
+                        title: enItem.title,
+                        contentEn:enItem.contentEn,
+                        contentKr:enItem.contentKr,
+                        explanation:enItem.explanation
+                    });
+                }
+                return {
+                    ...enItem,
+                    enIdx: Number(enItem.enIdx),
+                    isSlideView: idx === 0,
+                    isUpdating:false,
+                    tab: 'en',
+                };
+            }));
+        } else {
+            studyEnStore.enList = [];
+        }
+    })()
+    }, []);
 
     return useObserver(() => {
         return (
             <ViewEnglishPage
-                enList={toJS(studyEnStore.enList)}
-                slideOnOff={slideOnOff}
-                setSlideOnOff={setSlideOnOff}
-                slideTab={slideTab}
-                setSlideTab={setSlideTab}
-                isView={isView}
-                setIsView={setIsView}
                 addModalOpen={addModalOpen}
                 setAddModalOpen={setAddModalOpen}
                 slideContainerRef={slideContainerRef}
                 inputs={inputs}
                 setInputs={setInputs}
-                addEnglishPage={addEnglishPage}
+                enList={enList}
+                addEnItem={addEnItem}
+                updateEnItem={updateEnItem}
+                deleteEnItem={deleteEnItem}
+                updateInputs={updateInputs}
+                setUpdateInputs={setUpdateInputs}
             />
         );
     });

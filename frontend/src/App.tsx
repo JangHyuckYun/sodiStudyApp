@@ -7,6 +7,7 @@ import SodiRoutes from './utils/sodiStudy.router'
 const InitWrap = styled(Container)(({ theme }) => ({
     width: '100%',
     height: '100%',
+    overflowX:'hidden',
     [theme.breakpoints.down('lg')]: {
 
     },

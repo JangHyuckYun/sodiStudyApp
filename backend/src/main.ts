@@ -9,7 +9,7 @@ async function bootstrap() {
   setupSwagger(app);
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: false,
+      whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
       disableErrorMessages: false,

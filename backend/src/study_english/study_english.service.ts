@@ -39,6 +39,7 @@ export class StudyEnglishService {
   }
 
   async updateEn(updateEnDto: EnglishUpdateDto) {
+    console.log('updateEnDto', updateEnDto);
     return await this.enRepository.updateEn(updateEnDto);
   }
 
@@ -50,7 +51,14 @@ export class StudyEnglishService {
       .getMany();
   }
 
-  async deleteEn(delEnIdx: number) {
-    return await this.enRepository.delete(delEnIdx);
+  async deleteEn({ enIdx, cpIdx }: { enIdx: number; cpIdx: number }) {
+    return await this.enRepository
+      .createQueryBuilder('english')
+      .delete()
+      .where('english.chapter_id = :cpIdx AND enIdx= :enIdx', {
+        cpIdx,
+        enIdx,
+      })
+      .execute();
   }
 }

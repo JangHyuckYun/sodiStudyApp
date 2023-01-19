@@ -14,6 +14,13 @@ const ModalBox:any = styled(Box)(({theme}) => ({
     padding: '10px',
 }));
 
+const ModalItem:any = styled(Box)(({theme}) => ({
+    position: 'relative',
+    width: '100%',
+    margin:'12px 0'
+}));
+
 export {
-    ModalBox
+    ModalBox,
+    ModalItem
 }

@@ -60,7 +60,8 @@ export class StudyEnglishController {
     type: Number,
   })
   @Delete('delete')
-  async deleteEn(delEnIdx: number) {
-    await this.studyEnService.deleteEn(delEnIdx);
+  async deleteEn(@Body() obj: { enIdx: number; cpIdx: number }) {
+    console.log('obj', obj);
+    await this.studyEnService.deleteEn(obj);
   }
 }
